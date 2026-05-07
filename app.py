@@ -185,15 +185,17 @@ with col_pie:
         values=sleep_counts.values,
         hole=0.52,
         marker=dict(colors=[SLEEP_COLOURS[q] for q in sleep_counts.index]),
-        textinfo="label+percent",
-        textposition="outside",
+        textinfo="percent",
+        textposition="inside",
+        insidetextorientation="horizontal",
         hovertemplate="%{label}: %{value} nights (%{percent})<extra></extra>",
     ))
     fig_pie.update_layout(
         title="Sleep Quality Mix",
-        margin=dict(t=40, l=20, r=20, b=20), height=300,
-        showlegend=False,
-        annotations=[dict(text="nights", x=0.5, y=0.5, font_size=12, showarrow=False)],
+        margin=dict(t=40, l=10, r=10, b=60), height=320,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="top", y=-0.05, xanchor="center", x=0.5),
+        annotations=[dict(text=f"<b>{len(df)}</b><br>nights", x=0.5, y=0.5, font_size=13, showarrow=False)],
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
