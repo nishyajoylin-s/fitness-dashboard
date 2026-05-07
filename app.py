@@ -195,7 +195,7 @@ with col_pie:
         margin=dict(t=40, l=10, r=10, b=60), height=320,
         showlegend=True,
         legend=dict(orientation="h", yanchor="top", y=-0.05, xanchor="center", x=0.5),
-        annotations=[dict(text=f"<b>{len(df)}</b><br>nights", x=0.5, y=0.5, font_size=13, showarrow=False)],
+        annotations=[dict(text=f"<b>{len(df)}</b><br>days", x=0.5, y=0.5, font_size=13, showarrow=False)],
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
