@@ -59,12 +59,19 @@ net_cal = cal_consumed - cal_burned
 avg_sleep = round(df["Sleep Duration (Hours)"].mean(), 1)
 num_users = df["User ID"].nunique()
 
-c1.metric("Users", f"{num_users:,}")
-c2.metric("Total Steps", f"{total_steps:,}")
-c3.metric("Avg Daily Steps", f"{avg_daily_steps:,}")
-c4.metric("Calories Burned", f"{cal_burned:,}")
-c5.metric("Calories Consumed", f"{cal_consumed:,}")
-c6.metric("Net Calories", f"{net_cal:,}", delta=f"surplus" if net_cal > 0 else "deficit", delta_color="inverse")
+def fmt(n):
+    if abs(n) >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    if abs(n) >= 1_000:
+        return f"{n/1_000:.1f}K"
+    return str(n)
+
+c1.metric("Users", num_users)
+c2.metric("Total Steps", fmt(total_steps))
+c3.metric("Avg Daily Steps", fmt(avg_daily_steps))
+c4.metric("Calories Burned", fmt(cal_burned))
+c5.metric("Calories Consumed", fmt(cal_consumed))
+c6.metric("Net Calories", fmt(net_cal), delta="surplus" if net_cal > 0 else "deficit", delta_color="inverse")
 c7.metric("Avg Sleep", f"{avg_sleep} hrs")
 
 st.divider()
