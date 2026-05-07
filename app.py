@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Fitness Tracker", layout="wide")
+st.set_page_config(page_title="Fitness Tracker", layout="wide", page_icon="🏋️")
+st.title("🏋️ Fitness Tracker Dashboard")
+st.caption("50 users · July 1–20 2024 · Filtered view updates all charts and insights")
 
 SLEEP_COLOURS = {
     "Poor": "#e74c3c",
@@ -70,7 +72,7 @@ c1.metric("Users", num_users)
 c2.metric("Total Steps", fmt(total_steps))
 c3.metric("Avg Daily Steps", fmt(avg_daily_steps))
 c4.metric("Calories Burned", fmt(cal_burned))
-c5.metric("Calories Consumed", fmt(cal_consumed))
+c5.metric("Cal. Consumed", fmt(cal_consumed))
 c6.metric("Net Calories", fmt(net_cal), delta="surplus" if net_cal > 0 else "deficit", delta_color="inverse")
 c7.metric("Avg Sleep", f"{avg_sleep} hrs")
 
@@ -152,17 +154,25 @@ with col_sleep:
     ).reset_index()
 
     fig_sleep = go.Figure()
+    fig_sleep.add_trace(go.Scatter(
+        x=daily_sleep["Date"], y=daily_sleep["avg_sleep"],
+        mode="lines", line=dict(color="#bdc3c7", width=1.5),
+        showlegend=False, hoverinfo="skip",
+    ))
     for quality, colour in SLEEP_COLOURS.items():
         mask = daily_sleep["top_quality"] == quality
         subset = daily_sleep[mask]
-        fig_sleep.add_trace(go.Bar(
+        if subset.empty:
+            continue
+        fig_sleep.add_trace(go.Scatter(
             x=subset["Date"], y=subset["avg_sleep"],
-            name=quality, marker_color=colour,
-            hovertemplate="%{x|%b %d}<br>Sleep: %{y:.1f} hrs<br>" + quality + "<extra></extra>",
+            mode="markers", name=quality,
+            marker=dict(color=colour, size=11, line=dict(width=1, color="white")),
+            hovertemplate="%{x|%b %d}<br>%{y:.1f} hrs · " + quality + "<extra></extra>",
         ))
     fig_sleep.update_layout(
         title="Sleep Duration & Quality", xaxis_title=None, yaxis_title="Avg Hours",
-        barmode="stack", margin=dict(t=40, b=20), height=300, plot_bgcolor="white",
+        margin=dict(t=40, b=20), height=300, plot_bgcolor="white",
         xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#f0f0f0"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
@@ -173,15 +183,16 @@ with col_pie:
     fig_pie = go.Figure(go.Pie(
         labels=sleep_counts.index,
         values=sleep_counts.values,
-        hole=0.55,
+        hole=0.52,
         marker=dict(colors=[SLEEP_COLOURS[q] for q in sleep_counts.index]),
-        textinfo="percent",
+        textinfo="label+percent",
+        textposition="outside",
         hovertemplate="%{label}: %{value} nights (%{percent})<extra></extra>",
     ))
     fig_pie.update_layout(
         title="Sleep Quality Mix",
-        margin=dict(t=40, b=20), height=300,
-        legend=dict(orientation="v", x=1, y=0.5),
+        margin=dict(t=40, l=20, r=20, b=20), height=300,
+        showlegend=False,
         annotations=[dict(text="nights", x=0.5, y=0.5, font_size=12, showarrow=False)],
     )
     st.plotly_chart(fig_pie, use_container_width=True)
@@ -245,10 +256,12 @@ rest_poor = (
 )
 
 i1, i2, i3 = st.columns(3)
+sleep_lift = long_sleep_good - short_sleep_good
 
 with i1:
-    st.markdown("#### Takeaway")
-    st.markdown(f"""
+    st.info(f"""
+**Takeaway**
+
 - **{step_goal_pct:.0f}%** of days hit the 10,000-step target
 - **{good_sleep_pct:.0f}%** of nights rated Good or Excellent sleep
 - **{surplus_pct:.0f}%** of days in caloric surplus (consumed > burned)
@@ -256,18 +269,19 @@ with i1:
 """)
 
 with i2:
-    st.markdown("#### Keep Doing ✅")
-    sleep_lift = long_sleep_good - short_sleep_good
-    st.markdown(f"""
+    st.success(f"""
+**Keep Doing ✅**
+
 - **{best_workout}** delivers the highest avg calorie burn at **{best_workout_cal:,} kcal/session** — keep it in rotation
-- Workouts **≥45 min** are associated with **{long_sleep_good:.0f}%** Good/Excellent sleep vs **{short_sleep_good:.0f}%** for shorter sessions (+{sleep_lift:.0f}pp)
-- Maintaining consistent daily movement — step counts stay relatively stable across the 20-day window
+- Workouts **≥45 min** → **{long_sleep_good:.0f}%** Good/Excellent sleep vs **{short_sleep_good:.0f}%** for shorter sessions ({sleep_lift:+.0f}pp)
+- Step counts stay consistent across all 20 days — good movement habit
 """)
 
 with i3:
-    st.markdown("#### Stop / Watch Out ⚠️")
-    st.markdown(f"""
-- **{worst_workout}** has the lowest avg calorie burn among active workout types — consider replacing with higher-intensity sessions
-- **Rest days** show **{rest_poor:.0f}%** Poor/Fair sleep — unstructured rest without light movement may disrupt recovery
-- Caloric surplus on **{surplus_pct:.0f}%** of days suggests intake isn't being offset by burn — worth reviewing portion sizes on low-activity days
+    st.warning(f"""
+**Stop / Watch Out ⚠️**
+
+- **{worst_workout}** has the lowest avg calorie burn — swap for higher-intensity sessions
+- **Rest days** → **{rest_poor:.0f}%** Poor/Fair sleep — add light movement on rest days
+- Caloric surplus **{surplus_pct:.0f}%** of days — review portion sizes on low-activity days
 """)
