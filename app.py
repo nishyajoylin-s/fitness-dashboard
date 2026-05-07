@@ -142,8 +142,8 @@ with col_workout:
     )
     st.plotly_chart(fig_workout, use_container_width=True)
 
-# ── Row 4: Sleep analysis (50%) + Weight trend (50%) ────────────────────────
-col_sleep, col_weight = st.columns(2)
+# ── Row 4: Sleep trend (40%) + Sleep quality donut (25%) + Weight (35%) ─────
+col_sleep, col_pie, col_weight = st.columns([4, 2.5, 3.5])
 
 with col_sleep:
     daily_sleep = df.groupby("Date").agg(
@@ -167,6 +167,24 @@ with col_sleep:
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     st.plotly_chart(fig_sleep, use_container_width=True)
+
+with col_pie:
+    sleep_counts = df["Sleep Quality"].value_counts().reindex(SLEEP_LEVELS).dropna()
+    fig_pie = go.Figure(go.Pie(
+        labels=sleep_counts.index,
+        values=sleep_counts.values,
+        hole=0.55,
+        marker=dict(colors=[SLEEP_COLOURS[q] for q in sleep_counts.index]),
+        textinfo="percent",
+        hovertemplate="%{label}: %{value} nights (%{percent})<extra></extra>",
+    ))
+    fig_pie.update_layout(
+        title="Sleep Quality Mix",
+        margin=dict(t=40, b=20), height=300,
+        legend=dict(orientation="v", x=1, y=0.5),
+        annotations=[dict(text="nights", x=0.5, y=0.5, font_size=12, showarrow=False)],
+    )
+    st.plotly_chart(fig_pie, use_container_width=True)
 
 with col_weight:
     daily_weight = df.groupby("Date")["Weight (kg)"].mean().reset_index()
